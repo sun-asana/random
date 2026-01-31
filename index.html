@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Wheel Pro | sun-asana</title>
+    <title>Neon Wheel Pro + Delete | sun-asana</title>
     <style>
-        :root { --bg-color: #0a0a12; --panel-bg: #16213e; }
+        :root { --bg-color: #0a0a12; --panel-bg: #16213e; --neon: #ff00ff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 350px; background: var(--panel-bg); padding: 20px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid #334; display: flex; flex-direction: column; gap: 15px; }
         .main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #05050a 100%); position: relative; }
@@ -15,16 +15,17 @@
         .color-tools { display: flex; gap: 10px; align-items: center; }
         #mainColor { width: 50px; height: 50px; border: none; background: none; cursor: pointer; }
         input[type="text"], textarea { background: #0f3460; border: 1px solid #334; color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
-        #previewCanvas { cursor: pointer; transition: transform 0.1s; }
-        button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
         #codeOutput { height: 80px; font-family: monospace; font-size: 10px; background: #000; color: #0f0; margin-top: 10px; }
-        .winner-display { margin-top: 20px; font-size: 24px; font-weight: bold; min-height: 30px; text-shadow: 0 0 10px var(--neon); color: #fff; }
+        .winner-display { margin-top: 20px; font-size: 24px; font-weight: bold; min-height: 35px; text-shadow: 0 0 10px var(--neon); color: #fff; text-align: center; }
+        .checkbox-group { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; }
+        .checkbox-group input { width: auto; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>🎡 Neon Editor v2</h2>
+    <h2>🎡 Neon Editor v3</h2>
     <div class="form-group">
         <label>Элементы (через запятую):</label>
         <textarea id="items" oninput="updatePreview()">Бумаги, Тропинки, Квартиры, Клеточки, Тарифы, Шины, Участки</textarea>
@@ -35,6 +36,10 @@
             <input type="color" id="mainColor" value="#ff00ff" oninput="syncColor(this.value)">
             <input type="text" id="colorHex" value="#ff00ff" oninput="syncColor(this.value)">
         </div>
+    </div>
+    <div class="form-group checkbox-group">
+        <input type="checkbox" id="removeWinner" onchange="updatePreview()">
+        <label for="removeWinner" style="cursor:pointer; color:#fff;">Удалять выпавший сектор</label>
     </div>
     <button onclick="copyCode()">📋 Копировать для Genially</button>
     <textarea id="codeOutput" readonly></textarea>
@@ -51,9 +56,11 @@
     const mainColorInput = document.getElementById('mainColor');
     const hexInput = document.getElementById('colorHex');
     const winnerDisplay = document.getElementById('winnerName');
+    const removeCheck = document.getElementById('removeWinner');
     
     let angle = 0;
     let isSpinning = false;
+    let currentSectors = [];
 
     function adjust(hex, mag) {
         hex = hex.replace('#', '');
@@ -72,19 +79,23 @@
         }
     }
 
-    function drawWheel(currentAngle = angle) {
-        const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
+    function drawWheel() {
+        if (!isSpinning) {
+            currentSectors = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
+        }
+        renderFrame(angle, currentSectors);
+        generateFinalCode();
+    }
+
+    function renderFrame(currentAngle, sectors) {
         const baseColor = mainColorInput.value;
-        const num = items.length;
+        const num = sectors.length;
         const arc = (Math.PI * 2) / num;
-        const centerX = 275;
-        const centerY = 275;
-        const radius = 230;
+        const centerX = 275; const centerY = 275; const radius = 230;
         
         ctx.clearRect(0,0,550,550);
 
-        // Рисуем сектора
-        items.forEach((text, i) => {
+        sectors.forEach((text, i) => {
             const a = currentAngle + i * arc;
             const grad = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
             grad.addColorStop(0, adjust(baseColor, 0.3));
@@ -96,12 +107,10 @@
             ctx.arc(centerX, centerY, radius, a, a + arc);
             ctx.fill();
 
-            // Светлые разделители
             ctx.strokeStyle = adjust(baseColor, 1.8);
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Текст
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.rotate(a + arc / 2);
@@ -112,7 +121,7 @@
             ctx.restore();
         });
 
-        // Внешний контур (неоновый обод)
+        // Контур
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.strokeStyle = adjust(baseColor, 0.5);
@@ -120,27 +129,22 @@
         ctx.shadowBlur = 20;
         ctx.shadowColor = baseColor;
         ctx.stroke();
-        ctx.shadowBlur = 0; // Сбрасываем тень для других элементов
-
-        // РИСУЕМ УКАЗАТЕЛЬ (Треугольник) прямо на холсте
-        ctx.fillStyle = "#fff";
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "#fff";
-        ctx.beginPath();
-        ctx.moveTo(centerX - 20, 20);
-        ctx.lineTo(centerX + 20, 20);
-        ctx.lineTo(centerX, 60);
-        ctx.closePath();
-        ctx.fill();
         ctx.shadowBlur = 0;
 
-        generateFinalCode();
+        // Указатель
+        ctx.fillStyle = "#fff";
+        ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(centerX - 20, 20); ctx.lineTo(centerX + 20, 20); ctx.lineTo(centerX, 60);
+        ctx.fill();
+        ctx.shadowBlur = 0;
     }
 
     function spin() {
-        if (isSpinning) return;
+        if (isSpinning || currentSectors.length === 0) return;
         isSpinning = true;
         winnerDisplay.innerText = "";
+        
         let rotation = Math.random() * 360 + 1440;
         let currentRotation = 0;
 
@@ -148,16 +152,24 @@
             const step = (rotation - currentRotation) * 0.03 + 0.5;
             angle += step / 57.3;
             currentRotation += step;
-            drawWheel();
+            renderFrame(angle, currentSectors);
 
             if (currentRotation < rotation) {
                 requestAnimationFrame(animate);
             } else {
                 isSpinning = false;
-                const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
+                const arcSize = (Math.PI * 2) / currentSectors.length;
                 const realAngle = (angle % (Math.PI * 2));
-                const index = Math.floor(((Math.PI * 2.5 - realAngle) % (Math.PI * 2)) / ((Math.PI * 2) / items.length));
-                winnerDisplay.innerText = "Выпало: " + items[index];
+                const index = Math.floor(((Math.PI * 2.5 - realAngle) % (Math.PI * 2)) / arcSize);
+                
+                winnerDisplay.innerText = "Выпало: " + currentSectors[index];
+
+                if (removeCheck.checked && currentSectors.length > 1) {
+                    setTimeout(() => {
+                        currentSectors.splice(index, 1);
+                        renderFrame(angle, currentSectors);
+                    }, 1500);
+                }
             }
         };
         animate();
@@ -166,11 +178,12 @@
     function generateFinalCode() {
         const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
         const color = mainColorInput.value;
+        const remove = removeCheck.checked;
         
         const finalMarkup = `
 <div style="background:transparent; display:flex; flex-direction:column; align-items:center; width:100%;">
     <canvas id="wheelGen" width="550" height="550" style="width:100%; max-width:550px; cursor:pointer;"></canvas>
-    <div id="status" style="color:#fff; font:bold 24px sans-serif; margin-top:10px; text-shadow:0 0 10px ${color}; min-height:30px;"></div>
+    <div id="status" style="color:#fff; font:bold 24px sans-serif; margin-top:10px; text-shadow:0 0 10px ${color}; min-height:35px; text-align:center;"></div>
 </div>
 <script>
 (function(){
@@ -210,7 +223,8 @@
     }
 
     canvas.onclick = () => {
-        if(spinning) return; spinning = true; status.innerText = "";
+        if(spinning || sectors.length < 1) return; 
+        spinning = true; status.innerText = "";
         let rot = Math.random()*360 + 1440; let cur = 0;
         const anim = () => {
             let step = (rot-cur)*0.03 + 0.5; angle += step/57.3; cur += step;
@@ -220,6 +234,9 @@
                 spinning = false;
                 const idx = Math.floor(((Math.PI*2.5-(angle%(Math.PI*2)))%(Math.PI*2))/(Math.PI*2/sectors.length));
                 status.innerText = "Выпало: " + sectors[idx];
+                if(${remove} && sectors.length > 1) {
+                    setTimeout(() => { sectors.splice(idx,1); draw(); }, 1500);
+                }
             }
         }; anim();
     }; draw();
@@ -231,7 +248,7 @@
     function copyCode() {
         document.getElementById("codeOutput").select();
         document.execCommand("copy");
-        alert("Код скопирован для Genially!");
+        alert("Код скопирован!");
     }
 
     function updatePreview() { drawWheel(); }
