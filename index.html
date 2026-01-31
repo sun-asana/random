@@ -3,134 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Wheel Customizer | sun-asana</title>
+    <title>Neon Wheel Pro | sun-asana</title>
     <style>
-        :root {
-            --bg-color: #0a0a12;
-            --panel-bg: #16213e;
-        }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg-color);
-            color: #fff;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        /* Панель управления */
-        .sidebar {
-            width: 380px;
-            background: var(--panel-bg);
-            padding: 25px;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
-            border-right: 1px solid #334;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle, #1a1a2e 0%, #05050a 100%);
-        }
-        h2 { color: #00d2ff; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 13px; color: #aaa; }
-        
-        /* Стилизация выбора цвета */
-        .color-tools {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        #mainColor {
-            width: 60px;
-            height: 60px;
-            border: none;
-            background: none;
-            cursor: pointer;
-        }
-        input[type="text"], textarea {
-            background: #0f3460;
-            border: 1px solid #334;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .preview-container {
-            position: relative;
-            width: 480px;
-            height: 480px;
-        }
-        #previewCanvas { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%;
-            transition: filter 0.3s ease;
-        }
-        .pointer {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid #fff;
-            z-index: 10;
-            filter: drop-shadow(0 0 10px #fff);
-        }
-        button {
-            padding: 12px;
-            background: #e94560;
-            border: none;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        button:hover { filter: brightness(1.2); box-shadow: 0 0 15px #e94560; }
-        #codeOutput { height: 100px; font-family: monospace; font-size: 10px; background: #000; color: #0f0; }
+        :root { --bg-color: #0a0a12; --panel-bg: #16213e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 350px; background: var(--panel-bg); padding: 20px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid #334; display: flex; flex-direction: column; gap: 15px; }
+        .main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #05050a 100%); position: relative; }
+        h2 { color: #00d2ff; text-transform: uppercase; font-size: 18px; margin: 0; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 12px; color: #aaa; }
+        .color-tools { display: flex; gap: 10px; align-items: center; }
+        #mainColor { width: 50px; height: 50px; border: none; background: none; cursor: pointer; }
+        input[type="text"], textarea { background: #0f3460; border: 1px solid #334; color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        #previewCanvas { cursor: pointer; transition: transform 0.1s; }
+        button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        #codeOutput { height: 80px; font-family: monospace; font-size: 10px; background: #000; color: #0f0; margin-top: 10px; }
+        .winner-display { margin-top: 20px; font-size: 24px; font-weight: bold; min-height: 30px; text-shadow: 0 0 10px var(--neon); color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>🎡 Неон-Редактор</h2>
-    
+    <h2>🎡 Neon Editor v2</h2>
     <div class="form-group">
-        <label>Секторы (через запятую):</label>
-        <textarea id="items" oninput="updatePreview()">Удача, Скидка, Риск, Бонус, Джекпот, Смайл</textarea>
+        <label>Элементы (через запятую):</label>
+        <textarea id="items" oninput="updatePreview()">Бумаги, Тропинки, Квартиры, Клеточки, Тарифы, Шины, Участки</textarea>
     </div>
-
     <div class="form-group">
-        <label>Основной цвет неона (выбор + HEX):</label>
+        <label>Цвет неона:</label>
         <div class="color-tools">
-            <input type="color" id="mainColor" value="#00ffcc" oninput="syncColor(this.value)">
-            <input type="text" id="colorHex" value="#00ffcc" maxlength="7" oninput="syncColor(this.value)">
+            <input type="color" id="mainColor" value="#ff00ff" oninput="syncColor(this.value)">
+            <input type="text" id="colorHex" value="#ff00ff" oninput="syncColor(this.value)">
         </div>
     </div>
-
-    <div class="form-group">
-        <label><input type="checkbox" id="removeWinner" onchange="updatePreview()"> Удалять после выпадения</label>
-    </div>
-
-    <button onclick="copyCode()">📋 Копировать код для Genially</button>
+    <button onclick="copyCode()">📋 Копировать для Genially</button>
     <textarea id="codeOutput" readonly></textarea>
 </div>
 
 <div class="main">
-    <div class="preview-container">
-        <div class="pointer"></div>
-        <canvas id="previewCanvas" width="500" height="500"></canvas>
-    </div>
-    <p style="color: #444; margin-top: 20px;">Нажми на колесо, чтобы крутить</p>
+    <canvas id="previewCanvas" width="550" height="550"></canvas>
+    <div id="winnerName" class="winner-display"></div>
 </div>
 
 <script>
@@ -138,11 +50,11 @@
     const ctx = canvas.getContext('2d');
     const mainColorInput = document.getElementById('mainColor');
     const hexInput = document.getElementById('colorHex');
+    const winnerDisplay = document.getElementById('winnerName');
     
     let angle = 0;
     let isSpinning = false;
 
-    // Вспомогательная функция для изменения яркости HEX
     function adjust(hex, mag) {
         hex = hex.replace('#', '');
         let r = Math.min(255, Math.max(0, parseInt(hex.substring(0,2), 16) * mag));
@@ -155,72 +67,85 @@
         if(/^#[0-9A-F]{6}$/i.test(val)) {
             mainColorInput.value = val;
             hexInput.value = val;
+            document.documentElement.style.setProperty('--neon', val);
             updatePreview();
         }
     }
 
-    function drawWheel() {
+    function drawWheel(currentAngle = angle) {
         const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
         const baseColor = mainColorInput.value;
         const num = items.length;
         const arc = (Math.PI * 2) / num;
+        const centerX = 275;
+        const centerY = 275;
+        const radius = 230;
         
-        ctx.clearRect(0,0,500,500);
+        ctx.clearRect(0,0,550,550);
 
-        // Внешнее свечение всего канваса
-        canvas.style.filter = `drop-shadow(0 0 20px ${baseColor})`;
-
+        // Рисуем сектора
         items.forEach((text, i) => {
-            const currentAngle = angle + i * arc;
-            
-            // 1. Рисуем сектор с градиентом (переливом)
-            const grad = ctx.createRadialGradient(250, 250, 50, 250, 250, 250);
-            grad.addColorStop(0, adjust(baseColor, 0.4)); // Темный центр
-            grad.addColorStop(0.7, adjust(baseColor, 0.8)); // Основной цвет
-            grad.addColorStop(1, adjust(baseColor, 1.2));  // Светлый край
+            const a = currentAngle + i * arc;
+            const grad = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
+            grad.addColorStop(0, adjust(baseColor, 0.3));
+            grad.addColorStop(1, adjust(baseColor, 1.1));
             
             ctx.beginPath();
             ctx.fillStyle = grad;
-            ctx.moveTo(250, 250);
-            ctx.arc(250, 250, 240, currentAngle, currentAngle + arc);
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, a, a + arc);
             ctx.fill();
 
-            // 2. Разделительные полосы (светлее)
+            // Светлые разделители
             ctx.strokeStyle = adjust(baseColor, 1.8);
             ctx.lineWidth = 2;
             ctx.stroke();
 
             // Текст
             ctx.save();
-            ctx.translate(250, 250);
-            ctx.rotate(currentAngle + arc / 2);
+            ctx.translate(centerX, centerY);
+            ctx.rotate(a + arc / 2);
             ctx.fillStyle = "#fff";
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = baseColor;
             ctx.font = "bold 16px sans-serif";
             ctx.textAlign = "right";
-            ctx.fillText(text, 210, 8);
+            ctx.fillText(text, radius - 20, 6);
             ctx.restore();
         });
 
-        // 3. Внешний контур (темнее)
+        // Внешний контур (неоновый обод)
         ctx.beginPath();
-        ctx.arc(250, 250, 240, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.strokeStyle = adjust(baseColor, 0.5);
-        ctx.lineWidth = 12;
+        ctx.lineWidth = 15;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = baseColor;
         ctx.stroke();
-        
+        ctx.shadowBlur = 0; // Сбрасываем тень для других элементов
+
+        // РИСУЕМ УКАЗАТЕЛЬ (Треугольник) прямо на холсте
+        ctx.fillStyle = "#fff";
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(centerX - 20, 20);
+        ctx.lineTo(centerX + 20, 20);
+        ctx.lineTo(centerX, 60);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
         generateFinalCode();
     }
 
     function spin() {
         if (isSpinning) return;
         isSpinning = true;
+        winnerDisplay.innerText = "";
         let rotation = Math.random() * 360 + 1440;
         let currentRotation = 0;
 
         const animate = () => {
-            const step = (rotation - currentRotation) * 0.04 + 0.5;
+            const step = (rotation - currentRotation) * 0.03 + 0.5;
             angle += step / 57.3;
             currentRotation += step;
             drawWheel();
@@ -229,6 +154,10 @@
                 requestAnimationFrame(animate);
             } else {
                 isSpinning = false;
+                const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
+                const realAngle = (angle % (Math.PI * 2));
+                const index = Math.floor(((Math.PI * 2.5 - realAngle) % (Math.PI * 2)) / ((Math.PI * 2) / items.length));
+                winnerDisplay.innerText = "Выпало: " + items[index];
             }
         };
         animate();
@@ -237,22 +166,22 @@
     function generateFinalCode() {
         const items = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
         const color = mainColorInput.value;
-        const remove = document.getElementById('removeWinner').checked;
         
-        // Код для вставки
         const finalMarkup = `
-<div id="neon_wheel_wrap" style="background:#000; padding:20px; border-radius:50%; display:inline-block;">
-<canvas id="genWheel" width="500" height="500" style="width:100%; max-width:500px; border-radius:50%; cursor:pointer; filter:drop-shadow(0 0 20px ${color});"></canvas>
+<div style="background:transparent; display:flex; flex-direction:column; align-items:center; width:100%;">
+    <canvas id="wheelGen" width="550" height="550" style="width:100%; max-width:550px; cursor:pointer;"></canvas>
+    <div id="status" style="color:#fff; font:bold 24px sans-serif; margin-top:10px; text-shadow:0 0 10px ${color}; min-height:30px;"></div>
 </div>
 <script>
 (function(){
-    const canvas = document.getElementById('genWheel');
+    const canvas = document.getElementById('wheelGen');
     const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
     let sectors = ${JSON.stringify(items)};
-    let angle = 0;
-    const baseCol = "${color}";
+    let angle = 0; let spinning = false;
+    const base = "${color}";
 
-    function adjust(h, m) {
+    function adj(h, m) {
         h = h.replace('#','');
         let r = Math.min(255, parseInt(h.substring(0,2),16)*m);
         let g = Math.min(255, parseInt(h.substring(2,4),16)*m);
@@ -262,37 +191,38 @@
 
     function draw() {
         const arc = (Math.PI*2)/sectors.length;
-        ctx.clearRect(0,0,500,500);
+        ctx.clearRect(0,0,550,550);
         sectors.forEach((t, i) => {
             const a = angle + i*arc;
-            const g = ctx.createRadialGradient(250,250,50,250,250,250);
-            g.addColorStop(0, adjust(baseCol, 0.4));
-            g.addColorStop(1, adjust(baseCol, 1.2));
-            ctx.beginPath(); ctx.fillStyle = g; ctx.moveTo(250,250);
-            ctx.arc(250,250,245, a, a+arc); ctx.fill();
-            ctx.strokeStyle = adjust(baseCol, 1.8); ctx.lineWidth=2; ctx.stroke();
-            ctx.save(); ctx.translate(250,250); ctx.rotate(a+arc/2);
-            ctx.fillStyle="#fff"; ctx.font="bold 18px sans-serif"; ctx.textAlign="right";
-            ctx.fillText(t, 220, 10); ctx.restore();
+            const g = ctx.createRadialGradient(275,275,50,275,275,230);
+            g.addColorStop(0, adj(base, 0.4)); g.addColorStop(1, adj(base, 1.1));
+            ctx.beginPath(); ctx.fillStyle = g; ctx.moveTo(275,275);
+            ctx.arc(275,275,230, a, a+arc); ctx.fill();
+            ctx.strokeStyle = adj(base, 1.8); ctx.lineWidth=2; ctx.stroke();
+            ctx.save(); ctx.translate(275,275); ctx.rotate(a+arc/2);
+            ctx.fillStyle="#fff"; ctx.font="bold 16px sans-serif"; ctx.textAlign="right";
+            ctx.fillText(t, 210, 6); ctx.restore();
         });
-        ctx.beginPath(); ctx.arc(250,250,245,0,Math.PI*2);
-        ctx.strokeStyle=adjust(baseCol, 0.5); ctx.lineWidth=10; ctx.stroke();
+        ctx.beginPath(); ctx.arc(275,275,230,0,Math.PI*2);
+        ctx.strokeStyle=adj(base, 0.5); ctx.lineWidth=15; ctx.shadowBlur=20; ctx.shadowColor=base; ctx.stroke();
+        ctx.shadowBlur=0; ctx.fillStyle="#fff"; ctx.shadowBlur=15; ctx.shadowColor="#fff";
+        ctx.beginPath(); ctx.moveTo(255,20); ctx.lineTo(295,20); ctx.lineTo(275,60); ctx.fill();
     }
 
     canvas.onclick = () => {
+        if(spinning) return; spinning = true; status.innerText = "";
         let rot = Math.random()*360 + 1440; let cur = 0;
         const anim = () => {
-            let step = (rot-cur)*0.05 + 1; angle += step/57.3; cur += step;
+            let step = (rot-cur)*0.03 + 0.5; angle += step/57.3; cur += step;
             draw();
             if(cur < rot) requestAnimationFrame(anim);
             else {
-                const idx = Math.floor(((2*Math.PI-(angle%(2*Math.PI)))/(2*Math.PI))*sectors.length)%sectors.length;
-                alert("Выпало: " + sectors[idx]);
-                if(${remove} && sectors.length > 1) { sectors.splice(idx,1); draw(); }
+                spinning = false;
+                const idx = Math.floor(((Math.PI*2.5-(angle%(Math.PI*2)))%(Math.PI*2))/(Math.PI*2/sectors.length));
+                status.innerText = "Выпало: " + sectors[idx];
             }
         }; anim();
-    };
-    draw();
+    }; draw();
 })();
 <\/script>`;
         document.getElementById('codeOutput').value = finalMarkup;
@@ -301,7 +231,7 @@
     function copyCode() {
         document.getElementById("codeOutput").select();
         document.execCommand("copy");
-        alert("Код скопирован!");
+        alert("Код скопирован для Genially!");
     }
 
     function updatePreview() { drawWheel(); }
