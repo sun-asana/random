@@ -1,1 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheel Generator | sun-asana</title>
+    <style>
+        :root {
+            --neon-blue: #00d2ff;
+            --neon-purple: #9d50bb;
+            --bg-color: #1a1a2e;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        /* Левая панель - Настройки */
+        .sidebar {
+            width: 380px;
+            background: #16213e;
+            padding: 25px;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+            overflow-y: auto;
+            border-right: 1px solid var(--neon-blue);
+        }
+        /* Правая панель - Предпросмотр */
+        .main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle, #1a1a2e 0%, #0f0f1b 100%);
+        }
+        h2 { color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 13px; color: #aaa; }
+        input, textarea, select {
+            width: 100%;
+            background: #0f3460;
+            border: 1px solid #334;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--neon-blue); }
+        #codeOutput {
+            margin-top: 15px;
+            height: 120px;
+            font-size: 11px;
+            background: #000;
+            color: #0f0;
+        }
+        .preview-container {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            border: 10px solid #222;
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--neon-purple), inset 0 0 20px var(--neon-blue);
+        }
+        #previewCanvas { width: 100%; height: 100%; border-radius: 50%; cursor: pointer; }
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff0055;
+            filter: drop-shadow(0 0 5px #ff0055);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
 
+<div class="sidebar">
+    <h2>🎡 Редактор</h2>
+    
+    <div class="form-group">
+        <label>Секторы (через запятую):</label>
+        <textarea id="items" oninput="updatePreview()">Приз 1, Скидка, Банкрот, Еще раз, Подарок, +1 Шанс</textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Цвета (HEX через запятую):</label>
+        <input type="text" id="colors" value="#9d50bb,#00d2ff,#ff0055,#39ff14,#f39c12" oninput="updatePreview()">
+    </div>
+
+    <div class="form-group">
+        <label>Язык уведомления:</label>
+        <select id="lang">
+            <option value="Выпало: ">Русский</option>
+            <option value="Result: ">English</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label><input type="checkbox" id="removeWinner" onchange="updatePreview()"> Удалять сектор после выпадения</label>
+    </div>
+
+    <button onclick="copyCode()">📋 Копировать код для Genially</button>
+    
+    <label style="margin-top:20px;">Готовый код:</label>
+    <textarea id="codeOutput" readonly></textarea>
+</div>
+
+<div class="main">
+    <div class="preview-container">
+        <div class="pointer"></div>
+        <canvas id="previewCanvas" width="500" height="500"></canvas>
+    </div>
+    <p style="color: #666; margin-top: 20px;">Нажмите на колесо, чтобы проверить</p>
+</div>
+
+<script>
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    let angle = 0;
+    let isSpinning = false;
+
+    function getSettings() {
+        return {
+            items: document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== ""),
+            colors: document.getElementById('colors').value.split(',').map(s => s.trim()),
+            remove: document.getElementById('removeWinner').checked,
+            lang: document.getElementById('lang').value
+        };
+    }
+
+    function drawWheel() {
+        const { items, colors } = getSettings();
+        const num = items.length;
+        const arc = (Math.PI * 2) / num;
+        ctx.clearRect(0,0,500,500);
+
+        items.forEach((text, i) => {
+            const currentAngle = angle + i * arc;
+            ctx.beginPath();
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 240, currentAngle, currentAngle + arc);
+            ctx.fill();
+            ctx.strokeSyle = "rgba(255,255,255,0.2)";
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(currentAngle + arc / 2);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 18px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(text, 220, 10);
+            ctx.restore();
+        });
+        generateFinalCode();
+    }
+
+    function spin() {
+        if (isSpinning) return;
+        isSpinning = true;
+        let rotation = Math.random() * 360 + 1440;
+        let currentRotation = 0;
+        const speed = 0.15;
+
+        const animate = () => {
+            const step = (rotation - currentRotation) * 0.05 + 1;
+            angle += step / 57.3;
+            currentRotation += step;
+
+            drawWheel();
+
+            if (currentRotation < rotation) {
+                requestAnimationFrame(animate);
+            } else {
+                isSpinning = false;
+                const { items, lang } = getSettings();
+                const index = Math.floor(((2 * Math.PI - (angle % (2 * Math.PI))) / (2 * Math.PI)) * items.length) % items.length;
+                alert(lang + items[index]);
+            }
+        };
+        animate();
+    }
+
+    function generateFinalCode() {
+        const s = getSettings();
+        const code = `
+<div id="sun_asana_wheel" style="width:100%; max-width:500px; margin:auto; position:relative; background:transparent;">
+    <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:30px solid #ff0055; z-index:10; filter:drop-shadow(0 0 5px #ff0055);"></div>
+    <canvas id="wheelCanvas" width="500" height="500" style="width:100%; height:auto; cursor:pointer; border-radius:50%; box-shadow: 0 0 20px #9d50bb;"></canvas>
+</div>
+<script>
+(function() {
+    let sectors = ${JSON.stringify(s.items)};
+    const colors = ${JSON.stringify(s.colors)};
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    let angle = 0; let isSpinning = false;
+
+    function draw() {
+        const arc = (Math.PI * 2) / sectors.length;
+        ctx.clearRect(0,0,500,500);
+        sectors.forEach((t, i) => {
+            ctx.beginPath(); ctx.fillStyle = colors[i % colors.length];
+            ctx.moveTo(250, 250); ctx.arc(250, 250, 245, angle + i * arc, angle + (i+1) * arc);
+            ctx.fill(); ctx.save(); ctx.translate(250,250); ctx.rotate(angle + i*arc + arc/2);
+            ctx.fillStyle = "#fff"; ctx.font = "bold 20px sans-serif"; ctx.textAlign="right";
+            ctx.fillText(t, 230, 10); ctx.restore();
+        });
+    }
+    canvas.onclick = () => {
+        if (isSpinning || sectors.length < 1) return;
+        isSpinning = true;
+        let rot = Math.random() * 360 + 1440; let cur = 0;
+        const anim = () => {
+            let step = (rot - cur) * 0.05 + 1; angle += step/57.3; cur += step;
+            draw();
+            if (cur < rot) requestAnimationFrame(anim);
+            else {
+                isSpinning = false;
+                const idx = Math.floor(((2*Math.PI-(angle%(2*Math.PI)))/(2*Math.PI))*sectors.length)%sectors.length;
+                setTimeout(() => { 
+                    alert("${s.lang}" + sectors[idx]);
+                    if(${s.remove} && sectors.length > 1) { sectors.splice(idx,1); draw(); }
+                }, 100);
+            }
+        }; anim();
+    }; draw();
+})();
+<\/script>`;
+        document.getElementById('codeOutput').value = code;
+    }
+
+    function copyCode() {
+        const copyText = document.getElementById("codeOutput");
+        copyText.select();
+        document.execCommand("copy");
+        alert("Код скопирован! Теперь вставь его в Genially (Insert -> Others)");
+    }
+
+    function updatePreview() { drawWheel(); }
+    
+    canvas.onclick = spin;
+    drawWheel();
+</script>
+
+</body>
+</html>
