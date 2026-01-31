@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Wheel Final | sun-asana</title>
+    <title>Neon Wheel Final Pro | sun-asana</title>
     <style>
         :root { --bg-color: #0a0a12; --panel-bg: #16213e; --neon: #ff00ff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 350px; background: var(--panel-bg); padding: 20px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid #334; display: flex; flex-direction: column; gap: 15px; }
+        .sidebar { width: 350px; background: var(--panel-bg); padding: 20px; box-shadow: 2px 0 15px rgba(0,0,0,0.5); overflow-y: auto; border-right: 1px solid #334; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
         .main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a2e 0%, #05050a 100%); position: relative; }
         h2 { color: #00d2ff; text-transform: uppercase; font-size: 18px; margin: 0; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -17,14 +17,15 @@
         input[type="text"], textarea { background: #0f3460; border: 1px solid #334; color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
         button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
         #codeOutput { height: 80px; font-family: monospace; font-size: 10px; background: #000; color: #0f0; margin-top: 10px; }
-        .winner-display { margin-top: 20px; font-size: 28px; font-weight: bold; min-height: 40px; text-shadow: 0 0 15px var(--neon); color: #fff; text-align: center; }
+        .winner-display { margin-top: 20px; font-size: 32px; font-weight: bold; min-height: 45px; text-shadow: 0 0 15px var(--neon); color: #fff; text-align: center; }
         .checkbox-group { flex-direction: row; align-items: center; gap: 10px; display: flex; }
+        canvas { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>🎡 Neon Editor v3.2</h2>
+    <h2>🎡 Neon Editor v3.3</h2>
     <div class="form-group">
         <label>Элементы (через запятую):</label>
         <textarea id="items" oninput="updatePreview()">Бумаги, Тропинки, Квартиры, Клеточки, Тарифы, Шины, Участки</textarea>
@@ -45,7 +46,7 @@
 </div>
 
 <div class="main">
-    <canvas id="previewCanvas" width="550" height="550"></canvas>
+    <canvas id="previewCanvas" width="600" height="600"></canvas>
     <div id="winnerName" class="winner-display"></div>
 </div>
 
@@ -61,12 +62,12 @@
     let isSpinning = false;
     let currentSectors = [];
 
-    function adjust(hex, mag) {
+    function adj(hex, mag) {
         hex = hex.replace('#', '');
         let r = Math.min(255, Math.max(0, parseInt(hex.substring(0,2), 16) * mag));
         let g = Math.min(255, Math.max(0, parseInt(hex.substring(2,4), 16) * mag));
         let b = Math.min(255, Math.max(0, parseInt(hex.substring(4,6), 16) * mag));
-        return `rgb(${r},${g},${b})`;
+        return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
     }
 
     function syncColor(val) {
@@ -78,36 +79,39 @@
         }
     }
 
-    function renderFrame(currentAngle, sectors) {
-        const baseColor = mainColorInput.value;
+    function render(currentAngle, sectors) {
+        const base = mainColorInput.value;
         const num = sectors.length;
         const arc = (Math.PI * 2) / num;
-        const centerX = 275; const centerY = 275; const radius = 230;
+        const cx = 300; const cy = 300; const rad = 250;
         
-        ctx.clearRect(0,0,550,550);
+        ctx.clearRect(0,0,600,600);
+        if(num === 0) return;
 
         sectors.forEach((text, i) => {
             const a = currentAngle + i * arc;
-            const grad = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, radius);
-            grad.addColorStop(0, adjust(baseColor, 0.3));
-            grad.addColorStop(1, adjust(baseColor, 1.1));
+            const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+            g.addColorStop(0, adj(base, 0.4));
+            g.addColorStop(1, adj(base, 1.1));
             
-            ctx.beginPath(); ctx.fillStyle = grad; ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, a, a + arc); ctx.fill();
-            ctx.strokeStyle = adjust(baseColor, 1.8); ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.fillStyle = g; ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, rad, a, a + arc); ctx.fill();
+            ctx.strokeStyle = adj(base, 1.8); ctx.lineWidth = 2; ctx.stroke();
 
-            ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(a + arc / 2);
-            ctx.fillStyle = "#fff"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "right";
-            ctx.fillText(text, radius - 20, 6); ctx.restore();
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(a + arc / 2);
+            ctx.fillStyle = "#fff"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "right";
+            ctx.fillText(text, rad - 30, 7); ctx.restore();
         });
 
-        ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = adjust(baseColor, 0.5); ctx.lineWidth = 15;
-        ctx.shadowBlur = 20; ctx.shadowColor = baseColor; ctx.stroke();
+        // Обод
+        ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.strokeStyle = adj(base, 0.5); ctx.lineWidth = 15;
+        ctx.shadowBlur = 25; ctx.shadowColor = base; ctx.stroke();
         ctx.shadowBlur = 0;
 
+        // Стрелка
         ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
-        ctx.beginPath(); ctx.moveTo(centerX - 20, 20); ctx.lineTo(centerX + 20, 20); ctx.lineTo(centerX, 60); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx - 25, 10); ctx.lineTo(cx + 25, 10); ctx.lineTo(cx, 60); ctx.fill();
         ctx.shadowBlur = 0;
     }
 
@@ -116,35 +120,34 @@
         isSpinning = true;
         winnerDisplay.innerText = "";
         
-        let rotation = Math.random() * (Math.PI * 2) + (Math.PI * 10); 
-        let currentRotation = 0;
+        let rot = Math.random() * (Math.PI * 2) + (Math.PI * 12); 
+        let cur = 0;
 
-        const animate = () => {
-            let step = (rotation - currentRotation) * 0.03 + 0.005;
+        const anim = () => {
+            let step = (rot - cur) * 0.04 + 0.005;
             angle += step;
-            currentRotation += step;
-            renderFrame(angle, currentSectors);
+            cur += step;
+            render(angle, currentSectors);
 
-            if (currentRotation < rotation) {
-                requestAnimationFrame(animate);
+            if (cur < rot) {
+                requestAnimationFrame(anim);
             } else {
                 isSpinning = false;
-                const num = currentSectors.length;
-                const arc = (Math.PI * 2) / num;
-                const normalizedAngle = (angle % (Math.PI * 2));
-                const idx = Math.floor((Math.PI * 1.5 - normalizedAngle + Math.PI * 10) % (Math.PI * 2) / arc);
+                const arc = (Math.PI * 2) / currentSectors.length;
+                const norm = (angle % (Math.PI * 2));
+                const idx = Math.floor((Math.PI * 1.5 - norm + Math.PI * 20) % (Math.PI * 2) / arc);
                 
                 winnerDisplay.innerText = currentSectors[idx];
 
                 if (removeCheck.checked && currentSectors.length > 1) {
                     setTimeout(() => {
                         currentSectors.splice(idx, 1);
-                        renderFrame(angle, currentSectors);
-                    }, 1500);
+                        render(angle, currentSectors);
+                    }, 1200);
                 }
             }
         };
-        animate();
+        anim();
     }
 
     function generateFinalCode() {
@@ -153,81 +156,79 @@
         const remove = removeCheck.checked;
         
         const finalMarkup = `
-<div style="background:transparent; display:flex; flex-direction:column; align-items:center; width:100%;">
-    <canvas id="wheelGen" width="550" height="550" style="width:100%; max-width:550px; cursor:pointer;"></canvas>
-    <div id="status" style="color:#fff; font:bold 28px sans-serif; margin-top:10px; text-shadow:0 0 15px ${color}; min-height:40px; text-align:center;"></div>
+<div style="background:transparent; display:flex; flex-direction:column; align-items:center; width:100%; font-family: sans-serif;">
+    <canvas id="wG" width="600" height="600" style="width:100%; max-width:600px; cursor:pointer;"></canvas>
+    <div id="st" style="color:#fff; font-weight:bold; font-size:32px; margin-top:15px; text-shadow:0 0 15px ${color}; min-height:45px; text-align:center;"></div>
 </div>
 <script>
 (function(){
-    const canvas = document.getElementById('wheelGen');
-    const ctx = canvas.getContext('2d');
-    const status = document.getElementById('status');
-    let sectors = ${JSON.stringify(items)};
-    let angle = 0; let spinning = false;
-    const base = "${color}";
+    const c = document.getElementById('wG'); const ctx = c.getContext('2d');
+    const st = document.getElementById('st');
+    let s = ${JSON.stringify(items)};
+    let a = 0; let sp = false; const b = "${color}";
 
-    function adj(h, m) {
+    function ad(h, m) {
         h = h.replace('#','');
         let r = Math.min(255, parseInt(h.substring(0,2),16)*m);
         let g = Math.min(255, parseInt(h.substring(2,4),16)*m);
         let b = Math.min(255, parseInt(h.substring(4,6),16)*m);
-        return "rgb("+r+","+g+","+b+")";
+        return "rgb("+Math.round(r)+","+Math.round(g)+","+Math.round(b)+")";
     }
 
-    function draw() {
-        const arc = (Math.PI*2)/sectors.length;
-        ctx.clearRect(0,0,550,550);
-        sectors.forEach((t, i) => {
-            const a = angle + i*arc;
-            const g = ctx.createRadialGradient(275,275,50,275,275,230);
-            g.addColorStop(0, adj(base, 0.4)); g.addColorStop(1, adj(base, 1.1));
-            ctx.beginPath(); ctx.fillStyle = g; ctx.moveTo(275,275);
-            ctx.arc(275,275,230, a, a+arc); ctx.fill();
-            ctx.strokeStyle = adj(base, 1.8); ctx.lineWidth=2; ctx.stroke();
-            ctx.save(); ctx.translate(275,275); ctx.rotate(a+arc/2);
-            ctx.fillStyle="#fff"; ctx.font="bold 16px sans-serif"; ctx.textAlign="right";
-            ctx.fillText(t, 210, 6); ctx.restore();
+    function d() {
+        const arc = (Math.PI*2)/s.length;
+        ctx.clearRect(0,0,600,600);
+        s.forEach((t, i) => {
+            const an = a + i*arc;
+            const g = ctx.createRadialGradient(300,300,0,300,300,250);
+            g.addColorStop(0, ad(b, 0.4)); g.addColorStop(1, ad(b, 1.1));
+            ctx.beginPath(); ctx.fillStyle = g; ctx.moveTo(300,300);
+            ctx.arc(300,300,250, an, an+arc); ctx.fill();
+            ctx.strokeStyle = ad(b, 1.8); ctx.lineWidth=2; ctx.stroke();
+            ctx.save(); ctx.translate(300,300); ctx.rotate(an+arc/2);
+            ctx.fillStyle="#fff"; ctx.font="bold 18px sans-serif"; ctx.textAlign="right";
+            ctx.fillText(t, 220, 7); ctx.restore();
         });
-        ctx.beginPath(); ctx.arc(275,275,230,0,Math.PI*2);
-        ctx.strokeStyle=adj(base, 0.5); ctx.lineWidth=15; ctx.shadowBlur=20; ctx.shadowColor=base; ctx.stroke();
+        ctx.beginPath(); ctx.arc(300,300,250,0,Math.PI*2);
+        ctx.strokeStyle=ad(b, 0.5); ctx.lineWidth=15; ctx.shadowBlur=25; ctx.shadowColor=b; ctx.stroke();
         ctx.shadowBlur=0; ctx.fillStyle="#fff"; ctx.shadowBlur=15; ctx.shadowColor="#fff";
-        ctx.beginPath(); ctx.moveTo(255,20); ctx.lineTo(295,20); ctx.lineTo(275,60); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(275,10); ctx.lineTo(325,10); ctx.lineTo(300,60); ctx.fill();
     }
 
-    canvas.onclick = () => {
-        if(spinning || sectors.length < 1) return; 
-        spinning = true; status.innerText = "";
-        let rot = Math.random()*(Math.PI*2) + (Math.PI*10); let cur = 0;
-        const anim = () => {
-            let step = (rot-cur)*0.03 + 0.005; angle += step; cur += step;
-            draw();
-            if(cur < rot) requestAnimationFrame(anim);
+    c.onclick = () => {
+        if(sp || s.length < 1) return; sp = true; st.innerText = "";
+        let rot = Math.random()*(Math.PI*2) + (Math.PI*12); let cur = 0;
+        const anm = () => {
+            let step = (rot-cur)*0.04 + 0.005; a += step; cur += step;
+            d();
+            if(cur < rot) requestAnimationFrame(anm);
             else {
-                spinning = false;
-                const arcSize = (Math.PI*2)/sectors.length;
-                const norm = (angle % (Math.PI * 2));
-                const idx = Math.floor((Math.PI * 1.5 - norm + Math.PI * 10) % (Math.PI * 2) / arcSize);
-                status.innerText = sectors[idx];
-                if(${remove} && sectors.length > 1) {
-                    setTimeout(() => { sectors.splice(idx,1); draw(); }, 1500);
+                sp = false;
+                const arc = (Math.PI*2)/s.length;
+                const idx = Math.floor((Math.PI*1.5 - (a%(Math.PI*2)) + Math.PI*20)%(Math.PI*2)/arc);
+                st.innerText = s[idx];
+                if(${remove} && s.length > 1) {
+                    setTimeout(() => { s.splice(idx,1); d(); }, 1200);
                 }
             }
-        }; anim();
-    }; draw();
+        }; anm();
+    }; d();
 })();
 <\/script>`;
         document.getElementById('codeOutput').value = finalMarkup;
     }
 
     function copyCode() {
-        document.getElementById("codeOutput").select();
+        const out = document.getElementById("codeOutput");
+        out.select();
         document.execCommand("copy");
-        alert("Код скопирован!");
+        alert("Код скопирован! Вставьте его в Genially.");
     }
 
     function updatePreview() { 
         currentSectors = document.getElementById('items').value.split(',').map(s => s.trim()).filter(s => s !== "");
-        drawWheel(); 
+        render(angle, currentSectors);
+        generateFinalCode();
     }
     
     canvas.onclick = spin;
