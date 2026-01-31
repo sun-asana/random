@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Wheel Final Pro | sun-asana</title>
+    <title>Neon Wheel Ultra | sun-asana</title>
     <style>
         :root { --bg-color: #0a0a12; --panel-bg: #16213e; --neon: #ff00ff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -15,17 +15,17 @@
         .color-tools { display: flex; gap: 10px; align-items: center; }
         #mainColor { width: 50px; height: 50px; border: none; background: none; cursor: pointer; }
         input[type="text"], textarea { background: #0f3460; border: 1px solid #334; color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
-        button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        button { padding: 12px; background: #e94560; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #ff4d6d; box-shadow: 0 0 15px #e94560; }
         #codeOutput { height: 80px; font-family: monospace; font-size: 10px; background: #000; color: #0f0; margin-top: 10px; }
-        .winner-display { margin-top: 20px; font-size: 32px; font-weight: bold; min-height: 45px; text-shadow: 0 0 15px var(--neon); color: #fff; text-align: center; }
+        .winner-display { margin-top: 20px; font-size: 36px; font-weight: bold; min-height: 50px; color: #fff; text-align: center; }
         .checkbox-group { flex-direction: row; align-items: center; gap: 10px; display: flex; }
-        canvas { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>🎡 Neon Editor v3.3</h2>
+    <h2>🎡 Neon Editor v4.0</h2>
     <div class="form-group">
         <label>Элементы (через запятую):</label>
         <textarea id="items" oninput="updatePreview()">Бумаги, Тропинки, Квартиры, Клеточки, Тарифы, Шины, Участки</textarea>
@@ -41,7 +41,7 @@
         <input type="checkbox" id="removeWinner" onchange="updatePreview()">
         <label for="removeWinner" style="cursor:pointer; color:#fff; font-size: 13px;">Удалять выпавший сектор</label>
     </div>
-    <button onclick="copyCode()">📋 Копировать для Genially</button>
+    <button onclick="copyCode()">🚀 Копировать для Genially</button>
     <textarea id="codeOutput" readonly></textarea>
 </div>
 
@@ -103,13 +103,11 @@
             ctx.fillText(text, rad - 30, 7); ctx.restore();
         });
 
-        // Обод
         ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2);
         ctx.strokeStyle = adj(base, 0.5); ctx.lineWidth = 15;
         ctx.shadowBlur = 25; ctx.shadowColor = base; ctx.stroke();
         ctx.shadowBlur = 0;
 
-        // Стрелка
         ctx.fillStyle = "#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
         ctx.beginPath(); ctx.moveTo(cx - 25, 10); ctx.lineTo(cx + 25, 10); ctx.lineTo(cx, 60); ctx.fill();
         ctx.shadowBlur = 0;
@@ -119,6 +117,7 @@
         if (isSpinning || currentSectors.length === 0) return;
         isSpinning = true;
         winnerDisplay.innerText = "";
+        winnerDisplay.classList.remove('winner-active');
         
         let rot = Math.random() * (Math.PI * 2) + (Math.PI * 12); 
         let cur = 0;
@@ -138,6 +137,10 @@
                 const idx = Math.floor((Math.PI * 1.5 - norm + Math.PI * 20) % (Math.PI * 2) / arc);
                 
                 winnerDisplay.innerText = currentSectors[idx];
+                winnerDisplay.style.setProperty('--n', mainColorInput.value);
+                // Запуск анимации
+                void winnerDisplay.offsetWidth; 
+                winnerDisplay.style.animation = "neon-flicker 2s ease-in-out infinite";
 
                 if (removeCheck.checked && currentSectors.length > 1) {
                     setTimeout(() => {
@@ -157,8 +160,16 @@
         
         const finalMarkup = `
 <div style="background:transparent; display:flex; flex-direction:column; align-items:center; width:100%; font-family: sans-serif;">
+    <style>
+        @keyframes nF {
+            0%, 100% { text-shadow: 0 0 10px \${color}, 0 0 20px \${color}; opacity: 1; transform: scale(1.1); }
+            50% { text-shadow: 0 0 20px \${color}, 0 0 40px \${color}; opacity: 0.9; transform: scale(1.15); }
+            10%, 12%, 15% { opacity: 0.4; }
+        }
+        .win { animation: nF 2s ease-in-out infinite; }
+    </style>
     <canvas id="wG" width="600" height="600" style="width:100%; max-width:600px; cursor:pointer;"></canvas>
-    <div id="st" style="color:#fff; font-weight:bold; font-size:32px; margin-top:15px; text-shadow:0 0 15px ${color}; min-height:45px; text-align:center;"></div>
+    <div id="st" style="color:#fff; font-weight:bold; font-size:36px; margin-top:15px; min-height:50px; text-align:center; transition: 0.3s;"></div>
 </div>
 <script>
 (function(){
@@ -196,7 +207,7 @@
     }
 
     c.onclick = () => {
-        if(sp || s.length < 1) return; sp = true; st.innerText = "";
+        if(sp || s.length < 1) return; sp = true; st.innerText = ""; st.classList.remove('win');
         let rot = Math.random()*(Math.PI*2) + (Math.PI*12); let cur = 0;
         const anm = () => {
             let step = (rot-cur)*0.04 + 0.005; a += step; cur += step;
@@ -207,6 +218,7 @@
                 const arc = (Math.PI*2)/s.length;
                 const idx = Math.floor((Math.PI*1.5 - (a%(Math.PI*2)) + Math.PI*20)%(Math.PI*2)/arc);
                 st.innerText = s[idx];
+                st.classList.add('win');
                 if(${remove} && s.length > 1) {
                     setTimeout(() => { s.splice(idx,1); d(); }, 1200);
                 }
@@ -214,7 +226,7 @@
         }; anm();
     }; d();
 })();
-<\/script>`;
+<\/script>`.replace(/\${color}/g, color);
         document.getElementById('codeOutput').value = finalMarkup;
     }
 
